@@ -56,10 +56,11 @@ st.title("FranceMetrics")
 st.subheader("Comparateur de villes")
 st.caption(f"Comparaison limitée aux villes de 20 000 habitants ou plus : {len(population["Ville"])} villes comparables.")
 
+UNSPLASH_KEY = "xuVkgwEvEAS84xbKvSqedeK_q6n5bGQHyMhNaQt-D5k"
+
 def render_city_info(data):
     html = f"<h2 style='margin-bottom:0'>{data['Ville']}</h2>"
 
-    # Département + Région
     if pd.notna(data["Département"]) and pd.notna(data["Région"]):
         html += (
             f"<p style='color:gray; margin-top:0'>"
@@ -76,32 +77,37 @@ def render_city_info(data):
 
     return html
 
-def get_city_image_url(city_name):
-    query = f"{city_name} ville France"
-    url = f"https://www.bing.com/images/search?q={query.replace(' ', '+')}"
+
+@st.cache_data(ttl=86400)
+def get_city_image(city_name):
+
+    url = "https://api.unsplash.com/search/photos"
+
+    params = {
+        "query": f"{city_name} France cityscape",
+        "per_page": 1,
+        "orientation": "landscape"
+    }
+
+    headers = {
+        "Authorization": f"Client-ID {UNSPLASH_KEY}"
+    }
 
     try:
-        response = requests.get(url, timeout=5)
-        html = response.text
+        response = requests.get(url, params=params, headers=headers, timeout=10)
+        data = response.json()
 
-        marker = "murl&quot;:&quot;"
-        start = html.find(marker)
-        if start == -1:
-            return None
+        if data["results"]:
+            return data["results"][0]["urls"]["regular"]
 
-        start += len(marker)
-        end = html.find("&quot;", start)
-        img_url = html[start:end]
+    except Exception as e:
+        st.error(e)
 
-        if img_url.startswith("http") and (".jpg" in img_url or ".jpeg" in img_url or ".png" in img_url):
-            return img_url
+    return None
 
-        return None
-
-    except:
-        return None
 
 def display_city_image(img_url, width=350, height=220, radius=18):
+
     if img_url:
         st.markdown(
             f"""
@@ -121,6 +127,9 @@ def display_city_image(img_url, width=350, height=220, radius=18):
         )
     else:
         st.write("Photo indisponible")
+
+
+
 
 col_select1, col_select2 = st.columns(2)
 
