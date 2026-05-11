@@ -6,6 +6,8 @@ from streamlit_extras.metric_cards import style_metric_cards
 import plotly.express as px
 from geopy.geocoders import Nominatim
 import plotly.graph_objects as go
+import json
+import os
 
 
 population = pd.read_excel('population.xlsx')
@@ -84,7 +86,7 @@ def get_city_image(city_name):
     url = "https://api.unsplash.com/search/photos"
 
     params = {
-        "query": f"{city_name}, France, skyline, city",
+        "query": city_name,
         "per_page": 1,
         "orientation": "landscape"
     }
