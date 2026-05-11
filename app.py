@@ -77,29 +77,31 @@ def render_city_info(data):
     return html
 
 def get_city_image_url(city_name):
-    query = f"{city_name} ville France"
-    url = f"https://www.bing.com/images/search?q={query.replace(' ', '+')}"
+    
+api_key = "f671oepJgV38hRQi9xn1HRs6D4RLsYP2OncNmCRI6rDglv4j4UEIaDW0"
+    url = "https://api.pexels.com/v1/search"
+
+    headers = {
+        "Authorization": api_key
+    }
+
+    params = {
+        "query": f"{city_name} France city",
+        "per_page": 1
+    }
 
     try:
-        response = requests.get(url, timeout=5)
-        html = response.text
+        response = requests.get(url, headers=headers, params=params, timeout=5)
+        data = response.json()
 
-        marker = "murl&quot;:&quot;"
-        start = html.find(marker)
-        if start == -1:
-            return None
-
-        start += len(marker)
-        end = html.find("&quot;", start)
-        img_url = html[start:end]
-
-        if img_url.startswith("http") and (".jpg" in img_url or ".jpeg" in img_url or ".png" in img_url):
-            return img_url
-
-        return None
+        if data["photos"]:
+            return data["photos"][0]["src"]["large"]
 
     except:
         return None
+
+    return None
+
 
 def display_city_image(img_url, width=350, height=220, radius=18):
     if img_url:
