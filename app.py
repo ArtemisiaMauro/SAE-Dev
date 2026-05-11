@@ -58,6 +58,9 @@ st.title("FranceMetrics")
 st.subheader("Comparateur de villes")
 st.caption(f"Comparaison limitée aux villes de 20 000 habitants ou plus : {len(population["Ville"])} villes comparables.")
 
+
+UNSPLASH_KEY = "xuVkgwEvEAS84xbKvSqedeK_q6n5bGQHyMhNaQt-D5k"
+
 CACHE_FILE = "city_images_cache.json"
 
 
@@ -76,15 +79,13 @@ city_image_cache = load_cache()
 
 def get_city_image(city_name):
 
-    # 1. déjà en cache → instant
     if city_name in city_image_cache:
         return city_image_cache[city_name]
 
-    # 2. sinon API Unsplash
     url = "https://api.unsplash.com/search/photos"
 
     params = {
-        "query": city_name,
+        "query": f"{city_name} city france",
         "per_page": 1,
         "orientation": "landscape"
     }
@@ -97,24 +98,23 @@ def get_city_image(city_name):
         r = requests.get(url, params=params, headers=headers, timeout=10)
 
         if r.status_code != 200:
+            print("Unsplash error:", r.status_code, r.text)
             return None
 
         data = r.json()
 
-        if data.get("results"):
+        if data.get("results") and len(data["results"]) > 0:
             img_url = data["results"][0]["urls"]["regular"]
 
-            # 3. on stocke pour toujours
             city_image_cache[city_name] = img_url
             save_cache(city_image_cache)
 
             return img_url
 
-    except Exception:
-        return None
+    except Exception as e:
+        print("Erreur API Unsplash:", e)
 
     return None
-
 
 
 
