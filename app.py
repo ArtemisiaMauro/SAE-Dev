@@ -657,14 +657,22 @@ with tab4:
     # =========================
     @st.cache_data
     def get_coords(ville):
-        url = "https://nominatim.openstreetmap.org/search"
-        params = {"q": f"{ville}, France", "format": "json", "limit": 1}
-        headers = {"User-Agent": "FranceMetricsApp"}
-
-        r = requests.get(url, params=params, headers=headers, timeout=10)
-        data = r.json()
-        if data:
-            return float(data[0]["lat"]), float(data[0]["lon"])
+        try:
+            url = "https://nominatim.openstreetmap.org/search"
+            params = {"q": f"{ville}, France", "format": "json", "limit": 1}
+            headers = {"User-Agent": "FranceMetricsApp"}
+    
+            r = requests.get(url, params=params, headers=headers, timeout=10)
+            r.raise_for_status()
+    
+            data = r.json()
+    
+            if data:
+                return float(data[0]["lat"]), float(data[0]["lon"])
+    
+        except Exception:
+            return None, None
+    
         return None, None
 
 
