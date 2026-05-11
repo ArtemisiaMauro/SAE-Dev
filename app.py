@@ -84,7 +84,7 @@ def get_city_image(city_name):
     url = "https://api.unsplash.com/search/photos"
 
     params = {
-        "query": f"{city_name} France cityscape",
+        "query": f"{city_name}, France, skyline, city",
         "per_page": 1,
         "orientation": "landscape"
     }
