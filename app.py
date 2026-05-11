@@ -77,8 +77,7 @@ def render_city_info(data):
     return html
 
 def get_city_image_url(city_name):
-    
-api_key = "f671oepJgV38hRQi9xn1HRs6D4RLsYP2OncNmCRI6rDglv4j4UEIaDW0"
+    api_key = "f671oepJgV38hRQi9xn1HRs6D4RLsYP2OncNmCRI6rDglv4j4UEIaDW0"
     url = "https://api.pexels.com/v1/search"
 
     headers = {
