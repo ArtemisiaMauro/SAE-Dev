@@ -681,7 +681,7 @@ with tab4:
         lat, lon = get_coords(ville)
         if lat is None:
             return None
-
+    
         url = "https://archive-api.open-meteo.com/v1/archive"
         params = {
             "latitude": lat,
@@ -691,49 +691,60 @@ with tab4:
             "daily": "temperature_2m_mean",
             "timezone": "auto"
         }
-
-        return requests.get(url, params=params).json()
+    
+        try:
+            r = requests.get(url, params=params, timeout=10)
+            data = r.json()
+    
+            # 🔥 protection essentielle
+            if "daily" not in data:
+                return None
+    
+            return data
+    
+        except:
+            return None
 
 
     # =========================
     # SAISONS (CLIMAT)
     # =========================
-def season_mean(meteo):
-    # 🔴 protection anti-crash API vide
-    if not meteo or "daily" not in meteo:
-        return pd.Series(
-            [None, None, None, None],
-            index=["Hiver", "Printemps", "Été", "Automne"]
+    def season_mean(meteo):
+        # 🔴 protection anti-crash API vide
+        if not meteo or "daily" not in meteo:
+            return pd.Series(
+                [None, None, None, None],
+                index=["Hiver", "Printemps", "Été", "Automne"]
+            )
+    
+        if "time" not in meteo["daily"]:
+            return pd.Series(
+                [None, None, None, None],
+                index=["Hiver", "Printemps", "Été", "Automne"]
+            )
+    
+        df = pd.DataFrame({
+            "Date": pd.to_datetime(meteo["daily"]["time"]),
+            "Temp": meteo["daily"]["temperature_2m_mean"]
+        })
+    
+        df["Mois"] = df["Date"].dt.month
+    
+        def season(m):
+            if m in [12, 1, 2]:
+                return "Hiver"
+            elif m in [3, 4, 5]:
+                return "Printemps"
+            elif m in [6, 7, 8]:
+                return "Été"
+            else:
+                return "Automne"
+    
+        df["Saison"] = df["Mois"].apply(season)
+    
+        return df.groupby("Saison")["Temp"].mean().reindex(
+            ["Hiver", "Printemps", "Été", "Automne"]
         )
-
-    if "time" not in meteo["daily"]:
-        return pd.Series(
-            [None, None, None, None],
-            index=["Hiver", "Printemps", "Été", "Automne"]
-        )
-
-    df = pd.DataFrame({
-        "Date": pd.to_datetime(meteo["daily"]["time"]),
-        "Temp": meteo["daily"]["temperature_2m_mean"]
-    })
-
-    df["Mois"] = df["Date"].dt.month
-
-    def season(m):
-        if m in [12, 1, 2]:
-            return "Hiver"
-        elif m in [3, 4, 5]:
-            return "Printemps"
-        elif m in [6, 7, 8]:
-            return "Été"
-        else:
-            return "Automne"
-
-    df["Saison"] = df["Mois"].apply(season)
-
-    return df.groupby("Saison")["Temp"].mean().reindex(
-        ["Hiver", "Printemps", "Été", "Automne"]
-    )
 
 
     # =========================
