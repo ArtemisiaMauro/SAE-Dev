@@ -124,7 +124,7 @@ def display_city_image(img_url, width=350, height=220, radius=18):
             </div>
             """,
             unsafe_allow_html=True
-        )
+            )
     else:
         st.write("Photo indisponible")
 
@@ -163,13 +163,13 @@ col1, col2 = st.columns(2)
 
 with col1:
     st.badge("Ville 1", color="violet")
-    img1 = get_city_image_url(data1["Ville"])
+    img1 = get_city_image(data1["Ville"])
     display_city_image(img1)
     st.markdown(render_city_info(data1), unsafe_allow_html=True)
 
 with col2:
     st.badge("Ville 2", color="violet")
-    img2 = get_city_image_url(data2["Ville"])
+    img2 = get_city_image(data2["Ville"])
     display_city_image(img2)
     st.markdown(render_city_info(data2), unsafe_allow_html=True)
 
