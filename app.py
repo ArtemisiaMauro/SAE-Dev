@@ -58,31 +58,29 @@ st.title("FranceMetrics")
 st.subheader("Comparateur de villes")
 st.caption(f"Comparaison limitée aux villes de 20 000 habitants ou plus : {len(population["Ville"])} villes comparables.")
 
-UNSPLASH_KEY = "xuVkgwEvEAS84xbKvSqedeK_q6n5bGQHyMhNaQt-D5k"
-
-def render_city_info(data):
-    html = f"<h2 style='margin-bottom:0'>{data['Ville']}</h2>"
-
-    if pd.notna(data["Département"]) and pd.notna(data["Région"]):
-        html += (
-            f"<p style='color:gray; margin-top:0'>"
-            f"{data['Département']}, {data['Région']}"
-            f"</p>"
-        )
-
-    if pd.notna(data["Code INSEE"]):
-        html += (
-            f"<p style='color:gray; margin-top:0'>"
-            f"Code INSEE : {data['Code INSEE']}"
-            f"</p>"
-        )
-
-    return html
+CACHE_FILE = "city_images_cache.json"
 
 
-@st.cache_data(ttl=86400)
+def load_cache():
+    if os.path.exists(CACHE_FILE):
+        with open(CACHE_FILE, "r") as f:
+            return json.load(f)
+    return {}
+
+
+def save_cache(cache):
+    with open(CACHE_FILE, "w") as f:
+        json.dump(cache, f)
+        
+city_image_cache = load_cache()
+
 def get_city_image(city_name):
 
+    # 1. déjà en cache → instant
+    if city_name in city_image_cache:
+        return city_image_cache[city_name]
+
+    # 2. sinon API Unsplash
     url = "https://api.unsplash.com/search/photos"
 
     params = {
@@ -96,39 +94,30 @@ def get_city_image(city_name):
     }
 
     try:
-        response = requests.get(url, params=params, headers=headers, timeout=10)
-        data = response.json()
+        r = requests.get(url, params=params, headers=headers, timeout=10)
 
-        if data["results"]:
-            return data["results"][0]["urls"]["regular"]
+        if r.status_code != 200:
+            return None
 
-    except Exception as e:
-        st.error(e)
+        data = r.json()
+
+        if data.get("results"):
+            img_url = data["results"][0]["urls"]["regular"]
+
+            # 3. on stocke pour toujours
+            city_image_cache[city_name] = img_url
+            save_cache(city_image_cache)
+
+            return img_url
+
+    except Exception:
+        return None
 
     return None
 
 
-def display_city_image(img_url, width=350, height=220, radius=18):
 
-    if img_url:
-        st.markdown(
-            f"""
-            <div style="
-                width:{width}px;
-                height:{height}px;
-                border-radius:{radius}px;
-                overflow:hidden;
-                box-shadow:0 4px 12px rgba(0,0,0,0.15);
-                margin-bottom:10px;
-            ">
-                <img src="{img_url}" 
-                     style="width:100%; height:100%; object-fit:cover; display:block;">
-            </div>
-            """,
-            unsafe_allow_html=True
-            )
-    else:
-        st.write("Photo indisponible")
+
 
 
 
